@@ -1,0 +1,112 @@
+@using Models
+
+@if (!rendering)
+{
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <h3>Loading...</h3>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        <div class="col-8">
+            <HxSearchBox DataProvider="ProvideSearchResults" Label="Search" TItem="object"
+                Placeholder="Search for the name or id..." MinimumLength="1" Delay="0"
+                OnTextQueryTriggered="OnTextQueryTriggered">
+                <DefaultContentTemplate>
+                    <div class="p-2 text-muted">Type the name or the id and hit Enter...</div>
+                </DefaultContentTemplate>
+            </HxSearchBox>
+        </div>
+
+        <div class="col-3">
+            <HxSelect TItem="ZeldaGames" TValue="int?" Label="Game" Data="games" @bind-Value="gameId"
+                TextSelector="@(g => g.Name)" ValueSelector="@(g => g.Id)" Nullable="false"
+                NullDataText="Loading games..." />
+        </div>
+    </div>
+
+    @if (data.Length > 0)
+    {
+        <div style="display: flex; align-items: flex-start; justify-content: flex-start; flex-wrap: wrap; 
+    gap: 24px; margin-top: 12px;">
+            @foreach (var item in data)
+            {
+                <SearchItem DataItem="item" />
+            }
+        </div>
+    }
+    else
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <HxAlert Color="ThemeColor.Primary">No data found...</HxAlert>
+            </div>
+        </div>
+    }
+}
+
+
+@code
+{
+    [Parameter]
+    public string Search { get; set; } = string.Empty;
+    private Data[] data = Array.Empty<Data>();
+    private ResponseAPI responseAPI = new ResponseAPI();
+    private bool rendering = false;
+    private string triggeredTextQuery = string.Empty;
+    private List<ZeldaGames> games = new();
+    private int? gameId { get; set; }
+    override protected async Task OnInitializedAsync()
+    {
+        await SearchForCategory();
+        await InitializeGames();
+    }
+
+    private async Task InitializeGames()
+    {
+        await Task.Run(() =>
+        {
+            games.Add(new ZeldaGames { Id = 1, Name = "Breath of the Wild" });
+            games.Add(new ZeldaGames { Id = 2, Name = "Tears of the Kingdom" });
+        });
+    }
+    private async Task SearchForCategory()
+    {
+        var client = new RestClient("https://botw-compendium.herokuapp.com/api/v3/compendium/category");
+        var request = new RestRequest(Search, Method.Get);
+        var response = await client.GetAsync<ResponseAPI>(request);
+
+        if (response is not null)
+        {
+            responseAPI = response;
+            data = responseAPI.Data.OrderBy(x => x.Id).ToArray();
+
+            rendering = true;
+        }
+    }
+    private Task<SearchBoxDataProviderResult<object>> ProvideSearchResults(SearchBoxDataProviderRequest request)
+    {
+        // dummy data provider, no results
+        return Task.FromResult(new SearchBoxDataProviderResult<object>());
+    }
+
+    private Task OnTextQueryTriggered(string text)
+    {
+        try
+        {
+            var id = int.Parse(text);
+            data = responseAPI.Data.Where(x => x.Id == id).ToArray();
+        }
+        catch
+        {
+            data = responseAPI.Data.Where(x => x.Name.Contains(text, StringComparison.OrdinalIgnoreCase)).OrderBy(x =>
+            x.Id).ToArray();
+        }
+
+        triggeredTextQuery = text;
+        return Task.CompletedTask;
+    }
+}

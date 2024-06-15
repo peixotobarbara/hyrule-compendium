@@ -1,0 +1,69 @@
+<HxCard ImageAlt="@DataItem.Name" ImageSrc="@DataItem.Image" ImageHeight="180" style="width: 18rem;">
+    <BodyTemplate>
+        <HxCardTitle><b>@DataItem.Name</b></HxCardTitle>
+        <HxCardSubtitle>#@DataItem.Id</HxCardSubtitle>
+        <div style="display: flex; justify-content: flex-end; gap: 6px;">
+            <HxButton Size="ButtonSize.Small" Outline="true" Color="ThemeColor.Danger" Icon="BootstrapIcon.Heart">
+            </HxButton>
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary"
+                OnClick="() => HandleOffcanvasShow(OffcanvasSize.Large)">+ Details
+            </HxButton>
+        </div>
+    </BodyTemplate>
+</HxCard>
+
+<HxOffcanvas @ref="offcanvasComponent" Title="@DataItem.Name" Size="offcanvasSize">
+    <BodyTemplate>
+        <HxCard CssClass="bg-dark text-white mb-3">
+            <HeaderTemplate>Description</HeaderTemplate>
+            <BodyTemplate>
+                <HxCardText>@DataItem.Description</HxCardText>
+            </BodyTemplate>
+        </HxCard>
+
+        @if (@DataItem.CommonLocations != null && @DataItem.CommonLocations.Length > 0)
+        {
+            <HxCard CssClass="bg-dark text-white mb-3">
+                <HeaderTemplate>Common Locations</HeaderTemplate>
+                <BodyTemplate>
+                    <HxCardText>
+                        <ul>
+                            @foreach (var location in @DataItem.CommonLocations)
+                            {
+                                <li>@location</li>
+                            }
+                        </ul>
+                    </HxCardText>
+                </BodyTemplate>
+            </HxCard>
+        }
+
+        @if (@DataItem.Drops != null && @DataItem.Drops.Length > 0)
+        {
+            <HxCard CssClass="bg-dark text-white mb-3">
+                <HeaderTemplate>Drops</HeaderTemplate>
+                <BodyTemplate>
+                    <HxCardText>
+                        <ul>
+                            @foreach (var drop in @DataItem.Drops)
+                            {
+                                <li>@drop</li>
+                            }
+                        </ul>
+                    </HxCardText>
+                </BodyTemplate>
+            </HxCard>
+        }
+    </BodyTemplate>
+</HxOffcanvas>
+
+@code {
+    [Parameter] public Models.Data DataItem { get; set; } = new();
+    private HxOffcanvas offcanvasComponent = default!;
+    private OffcanvasSize offcanvasSize;
+    private async Task HandleOffcanvasShow(OffcanvasSize size)
+    {
+        offcanvasSize = size;
+        await offcanvasComponent.ShowAsync();
+    }
+}

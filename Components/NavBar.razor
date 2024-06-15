@@ -1,0 +1,7 @@
+<HxNavbar ColorMode="ColorMode.Dark" Color="ThemeColor.Primary" CssClass="bg-body-tertiary mb-4">
+    <HxNavbarBrand CssClass="mb-0 h1">@PageName</HxNavbarBrand>
+</HxNavbar>
+
+@code {
+    [Parameter] public string PageName { get; set; } = string.Empty;
+}
